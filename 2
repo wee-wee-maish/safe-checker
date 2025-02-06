@@ -1,0 +1,19 @@
+def check_url_safety(url):
+    headers = {"x-apikey": os.getenv("VIRUSTOTAL_API_KEY")}
+    
+    # Encode the URL before sending to VirusTotal
+    response = requests.post("https://www.virustotal.com/api/v3/urls", headers=headers, data={"url": url})
+    
+    if response.status_code == 200:
+        url_id = response.json()["data"]["id"]
+        
+        # Fetch the analysis report
+        analysis_response = requests.get(f"https://www.virustotal.com/api/v3/analyses/{url_id}", headers=headers)
+        
+        if analysis_response.status_code == 200:
+            result = analysis_response.json()["data"]["attributes"]["stats"]
+            malicious_count = result.get("malicious", 0)
+
+            return malicious_count == 0  # True if no malicious reports
+        
+    return False  # Assume unsafe if API fails
